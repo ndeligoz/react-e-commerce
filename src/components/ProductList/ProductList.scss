@@ -3,6 +3,10 @@
     &.product-body {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
+
+      @media only screen and (max-width: 768px) {
+        grid-template-columns: repeat(1, 1fr);
+      }
     }
     & .product-body-content-item {
       display: flex;
@@ -66,6 +70,13 @@
     grid-template-columns: repeat(4, 1fr);
     gap: 20px;
     padding: 30px;
+
+    @media only screen and (max-width: 768px) {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    @media only screen and (max-width: 600px) {
+      grid-template-columns: repeat(1, 1fr);
+    }
 
     &-content {
       text-decoration: none;
