@@ -1,12 +1,10 @@
-// ProductList.js
-
 import React, { useState } from "react";
-import "./ProductList.css";
+import "./ProductList.scss";
 import { Link } from "react-router-dom";
 import Empty from "../Empty/Empty";
 import { FiList, FiGrid, FiShoppingBag } from "react-icons/fi";
 
-const ProductList = ({ products, onStarClick }) => {
+const ProductList = ({ products }) => {
   const [isListView, setIsListView] = useState(true);
 
   const handleListViewClick = () => {
@@ -20,21 +18,21 @@ const ProductList = ({ products, onStarClick }) => {
   // Check if products array is empty
   if (products.length === 0) {
     return (
-      <div className="outside-sales">
+      <div className="home-outside-sales">
         <div className="empty">
-          <Empty message="Ürün bulunamadı." />
+          <Empty message="Product Not Found." />
         </div>
       </div>
     );
   }
 
   return (
-    <div>
-      <div className="header">
-        <div>
-          <FiShoppingBag /> Ürünler
+    <div className="product">
+      <div className="product-header">
+        <div className="product-header-title">
+          <FiShoppingBag /> Products
         </div>
-        <div className="view-buttons">
+        <div className="product-header-title__actions">
           <button
             onClick={handleListViewClick}
             className={isListView ? "active" : ""}
@@ -50,19 +48,26 @@ const ProductList = ({ products, onStarClick }) => {
         </div>
       </div>
 
-      <div className={`product-grid ${isListView ? "list" : ""}`}>
+      <div className={`product-body ${isListView ? "list" : ""}`}>
         {products.map((product) => (
           <Link
             to={`/product/${product.id}`}
             key={product.id}
-            className="product-link"
+            className="product-body-content"
           >
-            <div className="product" key={product.id}>
-              <div>
-                <img src={product.image} alt={product.title} />
+            <div className="product-body-content-item" key={product.id}>
+              <img
+                className="product-body-content-item__image"
+                src={product.image}
+                alt={product.title}
+              />
+
+              <div className="product-body-content-item__title">
+                {product.title}
               </div>
-              <div className="product-title">{product.title}</div>
-              <div className="product-price">{product.price}$</div>
+              <div className="product-body-content-item__price">
+                ${product.price}
+              </div>
             </div>
           </Link>
         ))}
