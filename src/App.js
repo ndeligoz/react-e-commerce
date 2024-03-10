@@ -1,90 +1,109 @@
-import { render, screen, fireEvent } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
-import App from "./App";
+import React, { useState, useEffect } from "react";
+import { Route, Routes } from "react-router-dom";
+import Home from "./components/Home/Home";
+import ProductDetail from "./components/ProductDetail/ProductDetail"; // ProductDetail ekledik
+import "./App.scss";
 
-jest.mock("react-router-dom", () => ({
-  Routes: ({ children }) => children, // Mock Routes to avoid routing issues
-}));
+const App = () => {
+  const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedCategories, setSelectedCategories] = useState([]);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [currentPage, setCurrentPage] = useState(1);
+  const [productsPerPage] = useState(12);
+  const [isListView, setIsListView] = useState(true);
 
-// Mock fetch to simulate successful data fetching
-jest.mock("fetch", () => ({
-  json: () =>
-    Promise.resolve({
-      products: [
-        {
-          id: 1,
-          title: "Product Title 1",
-          category: "Electronics",
-          starred: false,
-        },
-        {
-          id: 2,
-          title: "Product Title 2",
-          category: "Clothing",
-          starred: false,
-        },
-      ],
-    }),
-}));
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch("https://fakestoreapi.com/products");
+        const data = await response.json();
 
-describe("App", () => {
-  test("fetches data on component mount and renders products", async () => {
-    render(<App />);
+        const starredProducts =
+          JSON.parse(localStorage.getItem("starredProducts")) || {};
+        const productsWithStars = data.map((product) => ({
+          ...product,
+          starred: starredProducts[product.id] || false,
+        }));
 
-    // Use findByText to wait for product rendering
-    const productTitle = await screen.findByText(/Product Title/i);
-    expect(productTitle).toBeInTheDocument();
-  });
+        setProducts(productsWithStars);
+        setCategories(
+          Array.from(new Set(data.map((product) => product.category)))
+        );
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
 
-  test("filters products by selected categories", async () => {
-    render(<App />);
+    fetchData();
+  }, []);
 
-    // Simulate category selection
-    const categoryCheckbox = screen.getByRole("checkbox", {
-      name: "Electronics",
+  const handleCategoryChange = (event, category) => {
+    setSelectedCategories((prevCategories) => {
+      const updatedCategories = prevCategories.includes(category)
+        ? prevCategories.filter((c) => c !== category)
+        : [...prevCategories, category];
+
+      setCurrentPage(1);
+      return updatedCategories;
     });
-    userEvent.click(categoryCheckbox);
+  };
 
-    // Assert that only products in the selected category are displayed
-    const filteredProducts = await screen.findAllByText(/Electronics/i);
-    expect(filteredProducts.length).toBeGreaterThan(0);
-    expect(screen.queryByText(/Clothing/i)).not.toBeInTheDocument();
-  });
+  const handleSearchChange = (searchTerm) => {
+    setSearchTerm(searchTerm);
+    setCurrentPage(1);
+  };
 
-  test("searches products based on searchTerm", async () => {
-    render(<App />);
+  const handleViewChange = (isList) => {
+    setIsListView(isList);
+  };
 
-    // Simulate search input
-    const searchInput = screen.getByPlaceholderText("Search products");
-    userEvent.type(searchInput, "shirt");
+  const filteredProducts =
+    selectedCategories.length > 0
+      ? products.filter((product) =>
+          selectedCategories.includes(product.category)
+        )
+      : products;
 
-    // Assert that only products matching the search term are displayed
-    const searchedProducts = await screen.findAllByText(/shirt/i);
-    expect(searchedProducts.length).toBeGreaterThan(0);
-    expect(screen.queryByText(/tv/i)).not.toBeInTheDocument();
-  });
+  const searchedProducts = searchTerm
+    ? filteredProducts.filter((product) =>
+        product.title.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : filteredProducts;
 
-  test("navigates to product detail page on product click", async () => {
-    render(<App />);
+  const indexOfLastProduct = currentPage * productsPerPage;
+  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
+  const currentProducts = searchedProducts.slice(
+    indexOfFirstProduct,
+    indexOfLastProduct
+  );
 
-    const productLink = screen.getByText(/Product Title 1/i);
-    fireEvent.click(productLink);
+  const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-    // Assert that the product detail page is rendered
-    expect(screen.getByText(/Product Detail/i)).toBeInTheDocument();
-  });
+  return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <Home
+            categories={categories}
+            selectedCategories={selectedCategories}
+            handleCategoryChange={handleCategoryChange}
+            searchTerm={searchTerm}
+            handleSearchChange={handleSearchChange}
+            isListView={isListView}
+            currentProducts={currentProducts}
+            handleViewChange={handleViewChange}
+            currentPage={currentPage}
+            productsPerPage={productsPerPage}
+            paginate={paginate}
+            searchedProducts={searchedProducts}
+          />
+        }
+      />
+      <Route path="/product/:productId" element={<ProductDetail />} />
+    </Routes>
+  );
+};
 
-  // Add tests for pagination and view switching here
-
-  test("toggles product star state on click", async () => {
-    render(<App />);
-
-    const productStar = screen.getByRole("button", {
-      name: "Star Product Title 1",
-    });
-    fireEvent.click(productStar);
-
-    // Assert that the star icon is updated
-    expect(productStar).toHaveClass("starred");
-  });
-});
+export default App;
