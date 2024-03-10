@@ -1,3 +1,5 @@
+@import "../src/style/variables.scss";
+
 body,
 html {
   margin: 0;
@@ -17,8 +19,8 @@ html {
   height: 100%;
 
   &-categories {
-    background-color: #fffdfd;
-    border-right: 1px solid #e4e3e3;
+    background-color: $third;
+    border-right: 1px solid $border-40;
   }
 
   &-sales {
@@ -34,7 +36,7 @@ html {
     justify-content: center;
     width: 100%;
     margin-top: auto;
-    font-size: 24px;
-    font-weight: bold;
+    font-size: $fs-24;
+    font-weight: $fw-bold;
   }
 }

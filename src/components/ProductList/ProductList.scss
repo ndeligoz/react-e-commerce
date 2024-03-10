@@ -1,3 +1,5 @@
+@import "../../style/variables.scss";
+
 .product {
   .list {
     &.product-body {
@@ -8,6 +10,7 @@
         grid-template-columns: repeat(1, 1fr);
       }
     }
+
     & .product-body-content-item {
       display: flex;
       flex-direction: row;
@@ -31,21 +34,21 @@
     display: flex;
     justify-content: space-between;
     padding: 30px;
-    border-bottom: 1px dashed #cecbcb;
+    border-bottom: 1px dashed $border;
     position: sticky;
     z-index: 1;
     top: 0;
-    background-color: #fffdfd;
+    background-color: $third;
 
     &-title {
       display: flex;
       gap: 10px;
-      font-weight: 500;
-      font-size: 24px;
+      font-weight: $fw-medium;
+      font-size: $fs-24;
       align-items: center;
 
       & svg {
-        color: #7227f4;
+        color: $primary;
       }
 
       &__actions {
@@ -55,10 +58,10 @@
         & button {
           border: none;
           background-color: transparent;
-          font-size: 18px;
+          font-size: $fs-18;
 
           &.active {
-            color: #7227f4;
+            color: $primary;
           }
         }
       }
@@ -87,15 +90,15 @@
         flex-direction: column;
         align-items: center;
         gap: 16px;
-        border: 1px dashed #e5e5e5;
+        border: 1px dashed $secondary;
         padding: 16px;
-        background-color: #fffdfd;
+        background-color: $third;
         border-radius: 12px;
 
         &:hover {
           box-shadow: 4px 4px rgba(114, 39, 244, 0.1);
 
-          background-color: #ffff;
+          background-color: $white;
         }
 
         &__image {
@@ -107,11 +110,11 @@
         &__title {
           text-align: center;
           height: 52px;
-          font-size: 14px;
+          font-size: $fs-14;
         }
 
         &__price {
-          font-weight: 500;
+          font-weight: $fw-medium;
         }
       }
     }

@@ -1,3 +1,5 @@
+@import "../../style/variables.scss";
+
 .pagination {
   margin-top: auto;
   display: flex;
@@ -10,13 +12,13 @@
     & button {
       background-color: transparent;
       border: none;
-      font-size: 16px;
+      font-size: $fs-16;
 
       &:hover,
       &.active {
         border-color: transparent;
-        background-color: #f1e9fe;
-        color: #7227f4;
+        background-color: $primary-80;
+        color: $primary;
         border-radius: 12px;
       }
     }

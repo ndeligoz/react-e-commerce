@@ -1,3 +1,5 @@
+@import "../../style/variables.scss";
+
 .product-detail {
   height: 100%;
   display: flex;
@@ -10,10 +12,10 @@
     flex-direction: column;
     align-items: center;
     width: 50%;
-    border: 1px dashed #e5e5e5;
+    border: 1px dashed $secondary;
     border-radius: 12px;
     gap: 30px;
-    background-color: #fffdfd;
+    background-color: $third;
     padding: 0 50px;
 
     &__image {
@@ -24,18 +26,18 @@
 
     &__title {
       text-align: center;
-      font-size: 20px;
-      font-weight: bold;
+      font-size: $fs-20;
+      font-weight: $fw-bold;
       margin-top: 30px;
     }
 
     &__price {
-      font-weight: bold;
-      font-size: 20px;
+      font-weight: $fw-bold;
+      font-size: $fs-20;
     }
 
     &__desc {
-      font-size: 14px;
+      font-size: $fs-14;
       width: 50%;
       text-align: center;
     }
@@ -48,16 +50,16 @@
       margin-bottom: 30px;
 
       &-full {
-        color: #ebbb18;
+        color: $full;
       }
 
       &-empty {
-        color: #a5a5a5;
+        color: $empty;
       }
 
       &-count {
-        font-size: 12px;
-        font-weight: 500;
+        font-size: $fs-12;
+        font-weight: $fw-medium;
       }
     }
 
@@ -66,8 +68,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
-      font-weight: bold;
+      font-size: $fs-24;
+      font-weight: $fw-bold;
     }
   }
 }
