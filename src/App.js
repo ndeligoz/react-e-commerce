@@ -1,10 +1,9 @@
+// src/App.js
 import React, { useState, useEffect } from "react";
 import { Route, Routes } from "react-router-dom";
-import CategoryFilter from "./components/CategoryFilter/CategoryFilter";
-import ProductList from "./components/ProductList/ProductList";
-import Pagination from "./components/Pagination/Pagination";
-import ProductDetail from "./components/ProductDetail/ProductDetail";
-import "./App.css";
+import Home from "./components/Home/Home";
+import ProductDetail from "./components/ProductDetail/ProductDetail"; // ProductDetail ekledik
+import "./App.scss";
 
 const App = () => {
   const [products, setProducts] = useState([]);
@@ -15,13 +14,11 @@ const App = () => {
   const [productsPerPage] = useState(12);
   const [isListView, setIsListView] = useState(true);
 
-  console.log(selectedCategories);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const response = await fetch("https://fakestoreapi.com/products");
         const data = await response.json();
-        console.log("data", data);
 
         const starredProducts =
           JSON.parse(localStorage.getItem("starredProducts")) || {};
@@ -44,25 +41,13 @@ const App = () => {
 
   const handleCategoryChange = (event, category) => {
     setSelectedCategories((prevCategories) => {
-      // Eğer seçilen kategori zaten mevcut ise, onu listeden çıkar.
-      if (prevCategories.includes(category)) {
-        return prevCategories.filter((c) => c !== category);
-      } else {
-        // Mevcut kategorilere yeni kategoriyi ekle.
-        return [...prevCategories, category];
-      }
-    });
-    setCurrentPage(1);
-  };
+      const updatedCategories = prevCategories.includes(category)
+        ? prevCategories.filter((c) => c !== category)
+        : [...prevCategories, category];
 
-  const handleStarClick = (productId) => {
-    setProducts((prevProducts) =>
-      prevProducts.map((product) =>
-        product.id === productId
-          ? { ...product, starred: !product.starred }
-          : product
-      )
-    );
+      setCurrentPage(1);
+      return updatedCategories;
+    });
   };
 
   const handleSearchChange = (searchTerm) => {
@@ -70,17 +55,9 @@ const App = () => {
     setCurrentPage(1);
   };
 
-  useEffect(() => {
-    localStorage.setItem(
-      "starredProducts",
-      JSON.stringify(
-        products.reduce((acc, product) => {
-          acc[product.id] = product.starred;
-          return acc;
-        }, {})
-      )
-    );
-  }, [selectedCategories, products]);
+  const handleViewChange = (isList) => {
+    setIsListView(isList);
+  };
 
   const filteredProducts =
     selectedCategories.length > 0
@@ -104,45 +81,29 @@ const App = () => {
 
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
-  const handleViewChange = (isList) => {
-    setIsListView(isList);
-  };
-
   return (
-    <div className="layout">
-      <div className="categories">
-        <CategoryFilter
-          categories={categories}
-          onCategoryChange={handleCategoryChange}
-          onSearchChange={handleSearchChange}
-        />
-      </div>
-      <div className="sales">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <ProductList
-                products={currentProducts}
-                onStarClick={handleStarClick}
-                isListView={isListView}
-                handleViewChange={handleViewChange}
-              />
-            }
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <Home
+            categories={categories}
+            selectedCategories={selectedCategories}
+            handleCategoryChange={handleCategoryChange}
+            searchTerm={searchTerm}
+            handleSearchChange={handleSearchChange}
+            isListView={isListView}
+            currentProducts={currentProducts}
+            handleViewChange={handleViewChange}
+            currentPage={currentPage}
+            productsPerPage={productsPerPage}
+            paginate={paginate}
+            searchedProducts={searchedProducts}
           />
-          <Route path="/product/:productId" element={<ProductDetail />} />
-        </Routes>
-        <div className="pagination">
-          {currentProducts.length > 0 && (
-            <Pagination
-              currentPage={currentPage}
-              totalPages={Math.ceil(searchedProducts.length / productsPerPage)}
-              onPageChange={paginate}
-            />
-          )}
-        </div>
-      </div>
-    </div>
+        }
+      />
+      <Route path="/product/:productId" element={<ProductDetail />} />
+    </Routes>
   );
 };
 
