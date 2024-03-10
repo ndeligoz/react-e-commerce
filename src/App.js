@@ -1,110 +1,90 @@
-// src/App.js
-import React, { useState, useEffect } from "react";
-import { Route, Routes } from "react-router-dom";
-import Home from "./components/Home/Home";
-import ProductDetail from "./components/ProductDetail/ProductDetail"; // ProductDetail ekledik
-import "./App.scss";
+import { render, screen, fireEvent } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import App from "./App";
 
-const App = () => {
-  const [products, setProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [selectedCategories, setSelectedCategories] = useState([]);
-  const [searchTerm, setSearchTerm] = useState("");
-  const [currentPage, setCurrentPage] = useState(1);
-  const [productsPerPage] = useState(12);
-  const [isListView, setIsListView] = useState(true);
+jest.mock("react-router-dom", () => ({
+  Routes: ({ children }) => children, // Mock Routes to avoid routing issues
+}));
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch("https://fakestoreapi.com/products");
-        const data = await response.json();
+// Mock fetch to simulate successful data fetching
+jest.mock("fetch", () => ({
+  json: () =>
+    Promise.resolve({
+      products: [
+        {
+          id: 1,
+          title: "Product Title 1",
+          category: "Electronics",
+          starred: false,
+        },
+        {
+          id: 2,
+          title: "Product Title 2",
+          category: "Clothing",
+          starred: false,
+        },
+      ],
+    }),
+}));
 
-        const starredProducts =
-          JSON.parse(localStorage.getItem("starredProducts")) || {};
-        const productsWithStars = data.map((product) => ({
-          ...product,
-          starred: starredProducts[product.id] || false,
-        }));
+describe("App", () => {
+  test("fetches data on component mount and renders products", async () => {
+    render(<App />);
 
-        setProducts(productsWithStars);
-        setCategories(
-          Array.from(new Set(data.map((product) => product.category)))
-        );
-      } catch (error) {
-        console.error("Error fetching data:", error);
-      }
-    };
+    // Use findByText to wait for product rendering
+    const productTitle = await screen.findByText(/Product Title/i);
+    expect(productTitle).toBeInTheDocument();
+  });
 
-    fetchData();
-  }, []);
+  test("filters products by selected categories", async () => {
+    render(<App />);
 
-  const handleCategoryChange = (event, category) => {
-    setSelectedCategories((prevCategories) => {
-      const updatedCategories = prevCategories.includes(category)
-        ? prevCategories.filter((c) => c !== category)
-        : [...prevCategories, category];
-
-      setCurrentPage(1);
-      return updatedCategories;
+    // Simulate category selection
+    const categoryCheckbox = screen.getByRole("checkbox", {
+      name: "Electronics",
     });
-  };
+    userEvent.click(categoryCheckbox);
 
-  const handleSearchChange = (searchTerm) => {
-    setSearchTerm(searchTerm);
-    setCurrentPage(1);
-  };
+    // Assert that only products in the selected category are displayed
+    const filteredProducts = await screen.findAllByText(/Electronics/i);
+    expect(filteredProducts.length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Clothing/i)).not.toBeInTheDocument();
+  });
 
-  const handleViewChange = (isList) => {
-    setIsListView(isList);
-  };
+  test("searches products based on searchTerm", async () => {
+    render(<App />);
 
-  const filteredProducts =
-    selectedCategories.length > 0
-      ? products.filter((product) =>
-          selectedCategories.includes(product.category)
-        )
-      : products;
+    // Simulate search input
+    const searchInput = screen.getByPlaceholderText("Search products");
+    userEvent.type(searchInput, "shirt");
 
-  const searchedProducts = searchTerm
-    ? filteredProducts.filter((product) =>
-        product.title.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : filteredProducts;
+    // Assert that only products matching the search term are displayed
+    const searchedProducts = await screen.findAllByText(/shirt/i);
+    expect(searchedProducts.length).toBeGreaterThan(0);
+    expect(screen.queryByText(/tv/i)).not.toBeInTheDocument();
+  });
 
-  const indexOfLastProduct = currentPage * productsPerPage;
-  const indexOfFirstProduct = indexOfLastProduct - productsPerPage;
-  const currentProducts = searchedProducts.slice(
-    indexOfFirstProduct,
-    indexOfLastProduct
-  );
+  test("navigates to product detail page on product click", async () => {
+    render(<App />);
 
-  const paginate = (pageNumber) => setCurrentPage(pageNumber);
+    const productLink = screen.getByText(/Product Title 1/i);
+    fireEvent.click(productLink);
 
-  return (
-    <Routes>
-      <Route
-        path="/"
-        element={
-          <Home
-            categories={categories}
-            selectedCategories={selectedCategories}
-            handleCategoryChange={handleCategoryChange}
-            searchTerm={searchTerm}
-            handleSearchChange={handleSearchChange}
-            isListView={isListView}
-            currentProducts={currentProducts}
-            handleViewChange={handleViewChange}
-            currentPage={currentPage}
-            productsPerPage={productsPerPage}
-            paginate={paginate}
-            searchedProducts={searchedProducts}
-          />
-        }
-      />
-      <Route path="/product/:productId" element={<ProductDetail />} />
-    </Routes>
-  );
-};
+    // Assert that the product detail page is rendered
+    expect(screen.getByText(/Product Detail/i)).toBeInTheDocument();
+  });
 
-export default App;
+  // Add tests for pagination and view switching here
+
+  test("toggles product star state on click", async () => {
+    render(<App />);
+
+    const productStar = screen.getByRole("button", {
+      name: "Star Product Title 1",
+    });
+    fireEvent.click(productStar);
+
+    // Assert that the star icon is updated
+    expect(productStar).toHaveClass("starred");
+  });
+});
